@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import ProductCard from "../components/ProductCard";
 import Banner from "../components/Banner";
+import { API_URL } from "../config/api";
 
 const Home = () => {
   const [products, setProducts] = useState([]);
@@ -18,7 +19,7 @@ const Home = () => {
     try {
       setLoading(true);
       const response = await fetch(
-        "https://amazon-clone-backend-c615.onrender.com/api/products"
+        `${API_URL}/api/products`
       );
 
       if (!response.ok) {

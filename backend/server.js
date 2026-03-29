@@ -2,6 +2,7 @@ import express from "express";
 import mysql from "mysql2";
 import cors from "cors";
 import dotenv from "dotenv";
+import authRouter from "./routes/auth.js";
 
 dotenv.config();
 
@@ -26,6 +27,9 @@ db.connect(err => {
     console.log("✅ MySQL Connected");
   }
 });
+
+// ✅ REGISTER ROUTES
+app.use("/api/auth", authRouter);
 
 // ✅ TEST ROUTE
 app.get("/", (req, res) => {

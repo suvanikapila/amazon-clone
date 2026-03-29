@@ -1,5 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_URL } from "../config/api";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -17,7 +18,7 @@ const ProductDetail = () => {
       setLoading(true);
 
       const res = await fetch(
-        `https://amazon-clone-backend-c615.onrender.com/api/products/${id}`
+        `${API_URL}/api/products/${id}`
       );
 
       if (!res.ok) {
