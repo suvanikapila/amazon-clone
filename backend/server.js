@@ -1,37 +1,35 @@
 import express from "express";
-import cors from "cors";
 import mysql from "mysql2";
+import cors from "cors";
 import dotenv from "dotenv";
 
 dotenv.config();
 
 const app = express();
-
-// ✅ Middlewares
 app.use(cors());
 app.use(express.json());
 
-// ✅ MySQL Connection (using ENV variables)
+// ✅ MySQL Connection (Railway / Render compatible)
 const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
+  host: process.env.DB_HOST,      // gondola.proxy.rlwy.net
+  user: process.env.DB_USER,      // root
   password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT, // 🔥 IMPORTANT (Railway uses custom port)
+  database: process.env.DB_NAME,  // railway
+  port: process.env.DB_PORT       // 3306 OR railway port
 });
 
 // ✅ Connect DB
-db.connect((err) => {
+db.connect(err => {
   if (err) {
-    console.error("❌ DB Connection Failed:", err);
+    console.error("DB connection error:", err);
   } else {
     console.log("✅ MySQL Connected");
   }
 });
 
-// ✅ ROOT ROUTE (fixes "Cannot GET /")
+// ✅ TEST ROUTE
 app.get("/", (req, res) => {
-  res.send("🚀 Amazon Clone Backend is Running");
+  res.send("API is running 🚀");
 });
 
 // ✅ GET ALL PRODUCTS
@@ -40,7 +38,7 @@ app.get("/api/products", (req, res) => {
 
   db.query(query, (err, results) => {
     if (err) {
-      console.error("❌ Error fetching products:", err);
+      console.error(err);
       return res.status(500).json({ error: "Server error" });
     }
 
@@ -48,41 +46,27 @@ app.get("/api/products", (req, res) => {
   });
 });
 
-// ✅ ADD PRODUCT (optional)
-app.post("/api/products", (req, res) => {
-  const {
-    name,
-    description,
-    price,
-    category,
-    image,
-    rating,
-    reviewCount,
-    discount,
-    inStock,
-  } = req.body;
+// ✅ GET SINGLE PRODUCT (🔥 IMPORTANT FIX)
+app.get("/api/products/:id", (req, res) => {
+  const id = req.params.id;
 
-  const query = `
-    INSERT INTO products 
-    (name, description, price, category, image, rating, reviewCount, discount, inStock)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+  const query = "SELECT * FROM products WHERE id = ?";
 
-  db.query(
-    query,
-    [name, description, price, category, image, rating, reviewCount, discount, inStock],
-    (err, result) => {
-      if (err) {
-        console.error("❌ Error inserting product:", err);
-        return res.status(500).json({ error: "Server error" });
-      }
-
-      res.json({ message: "✅ Product added", id: result.insertId });
+  db.query(query, [id], (err, results) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: "Server error" });
     }
-  );
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    res.json(results[0]);
+  });
 });
 
-// ✅ PORT (Render uses process.env.PORT)
+// ✅ PORT FIX FOR RENDER
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
