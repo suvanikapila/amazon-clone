@@ -3,6 +3,10 @@ import mysql from "mysql2";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRouter from "./routes/auth.js";
+import { initializeDatabase } from "./config/schema.js";
+import { seedProducts } from "./config/seed.js";
+import pool from "./config/db.js";
+import bcrypt from "bcryptjs";
 
 dotenv.config();
 
@@ -27,6 +31,35 @@ db.connect(err => {
     console.log("✅ MySQL Connected");
   }
 });
+
+// ✅ Initialize Database and Seed Data
+const startServer = async () => {
+  try {
+    console.log("🔧 Initializing database...");
+    await initializeDatabase();
+    console.log("✅ Database initialized");
+    
+    console.log("🌱 Seeding products...");
+    await seedProducts();
+    
+    console.log("👤 Seeding demo user...");
+    // Check if demo user exists
+    const [users] = await pool.query("SELECT * FROM users WHERE email = ?", ["demo@example.com"]);
+    
+    if (users.length === 0) {
+      const hashedPassword = await bcrypt.hash("demo123", 10);
+      await pool.query(
+        "INSERT INTO users (name, email, password, phone) VALUES (?, ?, ?, ?)",
+        ["Demo User", "demo@example.com", hashedPassword, "9999999999"]
+      );
+      console.log("✅ Demo user created: demo@example.com / demo123");
+    } else {
+      console.log("ℹ️ Demo user already exists");
+    }
+  } catch (error) {
+    console.error("❌ Error during startup:", error.message);
+  }
+};
 
 // ✅ REGISTER ROUTES
 app.use("/api/auth", authRouter);
@@ -73,6 +106,8 @@ app.get("/api/products/:id", (req, res) => {
 // ✅ PORT FIX FOR RENDER
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+// ✅ Start server after initialization
+app.listen(PORT, async () => {
   console.log(`🚀 Server running on port ${PORT}`);
+  await startServer();
 });
