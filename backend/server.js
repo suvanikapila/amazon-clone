@@ -1,42 +1,90 @@
 import express from "express";
 import cors from "cors";
-import productsRoutes, { seedProducts } from "./routes/products.js";
-import authRoutes from "./routes/auth.js";
-import cartRoutes from "./routes/cart.js";
-import ordersRoutes from "./routes/orders.js";
-import reviewsRoutes from "./routes/reviews.js";
-import wishlistRoutes from "./routes/wishlist.js";
-import { initializeDatabase } from "./config/schema.js";
+import mysql from "mysql2";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const app = express();
 
+// ✅ Middlewares
 app.use(cors());
 app.use(express.json());
 
-// ✅ Initialize database
-console.log("📦 Initializing database...");
-await initializeDatabase();
-
-// ✅ Seed products
-console.log("🌱 Seeding products...");
-await seedProducts();
-
-// ✅ API routes
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productsRoutes);
-app.use("/api/cart", cartRoutes);
-app.use("/api/orders", ordersRoutes);
-app.use("/api/reviews", reviewsRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-
-// ✅ Health check endpoint
-app.get("/api/health", (req, res) => {
-  res.json({ status: "✅ Server is running" });
+// ✅ MySQL Connection (using ENV variables)
+const db = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT, // 🔥 IMPORTANT (Railway uses custom port)
 });
 
-const PORT = 5000;
+// ✅ Connect DB
+db.connect((err) => {
+  if (err) {
+    console.error("❌ DB Connection Failed:", err);
+  } else {
+    console.log("✅ MySQL Connected");
+  }
+});
+
+// ✅ ROOT ROUTE (fixes "Cannot GET /")
+app.get("/", (req, res) => {
+  res.send("🚀 Amazon Clone Backend is Running");
+});
+
+// ✅ GET ALL PRODUCTS
+app.get("/api/products", (req, res) => {
+  const query = "SELECT * FROM products";
+
+  db.query(query, (err, results) => {
+    if (err) {
+      console.error("❌ Error fetching products:", err);
+      return res.status(500).json({ error: "Server error" });
+    }
+
+    res.json(results);
+  });
+});
+
+// ✅ ADD PRODUCT (optional)
+app.post("/api/products", (req, res) => {
+  const {
+    name,
+    description,
+    price,
+    category,
+    image,
+    rating,
+    reviewCount,
+    discount,
+    inStock,
+  } = req.body;
+
+  const query = `
+    INSERT INTO products 
+    (name, description, price, category, image, rating, reviewCount, discount, inStock)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `;
+
+  db.query(
+    query,
+    [name, description, price, category, image, rating, reviewCount, discount, inStock],
+    (err, result) => {
+      if (err) {
+        console.error("❌ Error inserting product:", err);
+        return res.status(500).json({ error: "Server error" });
+      }
+
+      res.json({ message: "✅ Product added", id: result.insertId });
+    }
+  );
+});
+
+// ✅ PORT (Render uses process.env.PORT)
+const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
-  console.log(`📡 API available at http://localhost:${PORT}/api`);
 });

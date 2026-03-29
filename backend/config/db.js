@@ -1,10 +1,11 @@
-import mysql from "mysql2/promise";
+import mysql from "mysql2";
 
 const pool = mysql.createPool({
-  host: "localhost",
-  user: "root",
-  password: "1Jan,1980",
-  database: "amazon_clone",
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  port: process.env.DB_PORT, 
 });
 
-export default pool;
+export default pool.promise();
