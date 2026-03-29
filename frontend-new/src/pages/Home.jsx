@@ -17,8 +17,10 @@ const Home = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("https://amazon-clone-backend-c615.onrender.com/api/products");
-      
+      const response = await fetch(
+        "https://amazon-clone-backend-c615.onrender.com/api/products"
+      );
+
       if (!response.ok) {
         setError("Failed to load products");
         setLoading(false);
@@ -28,7 +30,6 @@ const Home = () => {
       const data = await response.json();
       setProducts(data);
 
-      // Extract unique categories
       const uniqueCategories = ["All", ...new Set(data.map(p => p.category))];
       setCategories(uniqueCategories);
     } catch (err) {
@@ -54,7 +55,7 @@ const Home = () => {
 
   if (error) {
     return (
-      <div style={{ padding: "40px 20px" }}>
+      <div style={{ padding: "40px 20px", textAlign: "center" }}>
         <p style={{ color: "red" }}>{error}</p>
         <button onClick={fetchProducts}>Retry</button>
       </div>
@@ -64,60 +65,83 @@ const Home = () => {
   return (
     <div>
       <Banner />
+
       <div style={{ padding: "20px" }}>
-      <div style={{ marginBottom: "20px" }}>
+        
+        {/* 🔍 SEARCH */}
         <input
           placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{
             width: "100%",
+            maxWidth: "600px",
+            margin: "0 auto",
+            display: "block",
             padding: "12px",
             marginBottom: "20px",
             border: "1px solid #ddd",
-            borderRadius: "4px",
-            fontSize: "16px",
-            boxSizing: "border-box"
+            borderRadius: "6px",
+            fontSize: "16px"
           }}
         />
 
-        <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+        {/* 🏷 CATEGORY FILTER */}
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            marginBottom: "20px"
+          }}
+        >
           {categories.map(c => (
             <button
               key={c}
               onClick={() => setCategory(c)}
               style={{
-                padding: "8px 16px",
+                padding: "8px 14px",
                 background: category === c ? "#FF9900" : "#fff",
                 color: category === c ? "white" : "#333",
                 border: "1px solid #ddd",
-                borderRadius: "4px",
+                borderRadius: "20px",
                 cursor: "pointer",
-                fontWeight: category === c ? "bold" : "normal"
+                fontWeight: category === c ? "bold" : "normal",
+                fontSize: "14px"
               }}
             >
               {c}
             </button>
           ))}
         </div>
-      </div>
 
-      <div style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(250px, 1fr))",
-        gap: "20px",
-        marginTop: "20px"
-      }}>
-        {filtered.length > 0 ? (
-          filtered.map(p => (
-            <ProductCard key={p.id} product={p} />
-          ))
-        ) : (
-          <p style={{ gridColumn: "1 / -1", textAlign: "center", color: "#666" }}>
-            No products found
-          </p>
-        )}
-      </div>
+        {/* 🛍 PRODUCTS GRID */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+            gap: "20px",
+            marginTop: "20px"
+          }}
+        >
+          {filtered.length > 0 ? (
+            filtered.map(p => (
+              <ProductCard key={p.id} product={p} />
+            ))
+          ) : (
+            <p
+              style={{
+                gridColumn: "1 / -1",
+                textAlign: "center",
+                color: "#666"
+              }}
+            >
+              No products found
+            </p>
+          )}
+        </div>
+
       </div>
     </div>
   );
