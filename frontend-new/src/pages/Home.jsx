@@ -17,7 +17,7 @@ const Home = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/products");
+      const response = await fetch("https://amazon-clone-backend-c615.onrender.com/api/products");
       
       if (!response.ok) {
         setError("Failed to load products");
